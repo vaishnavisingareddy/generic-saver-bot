@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MedicineTable, MedicineRow } from "@/components/medicine/MedicineTable";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 const sampleRows: MedicineRow[] = [
   {
@@ -35,6 +36,7 @@ const sampleRows: MedicineRow[] = [
 const Index = () => {
   const [rows, setRows] = useState<MedicineRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
+  const approved = rows.filter((r) => r.approval === "approved");
 
   const handleFile = (file?: File) => {
     if (!file) return;
@@ -100,7 +102,51 @@ const Index = () => {
               Your suggested substitutions will appear here after you upload a prescription.
             </div>
           ) : (
-            <MedicineTable rows={rows} onApprove={onApprove} onDecline={onDecline} />
+            <>
+              <MedicineTable rows={rows} onApprove={onApprove} onDecline={onDecline} />
+              <div className="mt-6 flex justify-end">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="lg" disabled={approved.length === 0} aria-label="View approved list">
+                      View approved list {approved.length > 0 ? `(${approved.length})` : ""}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Approved substitutions</DialogTitle>
+                      <DialogDescription>These are the medicines you approved to substitute.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {approved.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">No approved items yet.</p>
+                      ) : (
+                        <ul className="space-y-3">
+                          {approved.map((m) => (
+                            <li key={m.id} className="flex items-center justify-between rounded-md border p-3">
+                              <div>
+                                <div className="font-medium">{m.prescribedName}</div>
+                                <div className="text-xs text-muted-foreground">→ {m.genericName}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm">Savings: ₹{Math.max(0, m.brandedPrice - m.genericPrice).toLocaleString("en-IN")}</div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="secondary">Close</Button>
+                      </DialogClose>
+                      {approved.length > 0 && (
+                        <Button>Confirm and continue</Button>
+                      )}
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </>
           )}
         </section>
       </main>
